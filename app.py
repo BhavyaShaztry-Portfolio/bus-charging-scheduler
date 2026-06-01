@@ -42,12 +42,12 @@ for f in sorted(SCENARIO_DIR.glob("scenario_*.json")):
     d = load_scenario(f)
     scenarios_raw[d["id"]] = d
 
-# ── Header ─────────────────────────────────────────────────────────────────────
+# ── Header ─────────────
 st.title("⚡ Bus Charging Scheduler")
 st.caption("Bengaluru ↔ Kochi  ·  540 km  ·  4 charging stations  ·  Python + Streamlit")
 st.divider()
 
-# ── Scenario picker ────────────────────────────────────────────────────────────
+# ── Scenario picker ──────────────────────────────────────────────────────
 selected_id = st.selectbox(
     "Select scenario",
     options=list(scenarios_raw.keys()),
