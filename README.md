@@ -9,7 +9,7 @@ A Streamlit app that schedules electric bus charging on the Bengaluru–Kochi ro
 ## Running locally
 
 ```bash
-git clone <your-repo>
+git clone <repo>
 cd bus-charging-scheduler
 pip install -r requirements.txt
 streamlit run app.py
