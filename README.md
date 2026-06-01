@@ -4,7 +4,7 @@ A Streamlit app that schedules electric bus charging on the Bengaluru–Kochi ro
 
 ## Live App
 
-[Hosted on Streamlit Community Cloud] — add your URL here after deployment
+[Hosted on Streamlit Community Cloud] - https://bus-charging-scheduler-o9tzjvvkpoyaacwmyagv69.streamlit.app/
 
 ## Running locally
 
@@ -19,7 +19,7 @@ Then open http://localhost:8501 in your browser.
 
 ## How to change a weight
 
-Weights live in each scenario JSON file — one place, no code change required.
+Weights live in each scenario JSON file - one place, no code change required.
 
 Example: bump operator fairness for scenario 4:
 
@@ -36,7 +36,7 @@ Reload the app; the scheduler immediately uses the new values.
 
 ## How to add a new rule
 
-**Step 1** — Add the weight to your scenario JSON:
+**Step 1** - Add the weight to your scenario JSON:
 
 ```json
 "weights": {
@@ -47,7 +47,7 @@ Reload the app; the scheduler immediately uses the new values.
 }
 ```
 
-**Step 2** — Parse the new weight in `run_scheduler()` inside `scheduler/engine.py`:
+**Step 2** - Parse the new weight in `run_scheduler()` inside `scheduler/engine.py`:
 
 ```python
 weights = Weights(
@@ -58,7 +58,7 @@ weights = Weights(
 )
 ```
 
-**Step 3** — Add the field to the `Weights` dataclass:
+**Step 3** - Add the field to the `Weights` dataclass:
 
 ```python
 @dataclass
@@ -69,7 +69,7 @@ class Weights:
     priority: float = 0.0   # ← new field
 ```
 
-**Step 4** — Add the penalty term in `_score_plan()`:
+**Step 4** - Add the penalty term in `_score_plan()`:
 
 ```python
 # ── Priority: penalise non-priority buses relative to priority buses
@@ -81,30 +81,12 @@ return (weights.individual * individual_penalty
       + weights.priority   * priority_penalty)   # ← new term
 ```
 
-That's the entire change. The engine core doesn't move.
+That's the entire change. The engine core doesn't move
 
 ## How to add a new scenario
 
 1. Copy any existing `scenarios/scenario_N.json`
 2. Edit the `buses` array with your departure schedule
 3. Optionally override `weights`, `stations_config`, `physics`, or `route`
-4. Save as `scenarios/scenario_6.json` — it auto-appears in the dropdown
+4. Save as `scenarios/scenario_6.json` -it auto-appears in the dropdown
 
-## Project structure
-
-```
-bus-charging-scheduler/
-├── app.py                  # Streamlit UI
-├── scheduler/
-│   ├── __init__.py
-│   └── engine.py           # All scheduling logic
-├── scenarios/
-│   ├── scenario_1.json     # Even spacing (baseline)
-│   ├── scenario_2.json     # Bunched start
-│   ├── scenario_3.json     # Asymmetric load
-│   ├── scenario_4.json     # Operator-heavy (KPN)
-│   └── scenario_5.json     # Worst-case convergence
-├── requirements.txt
-├── README.md
-└── ARCHITECTURE.md
-```

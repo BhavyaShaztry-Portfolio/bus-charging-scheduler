@@ -5,14 +5,14 @@
 ### Why this approach?
 
 The problem has two separable sub-problems:
-1. **Plan selection** — which charging stations should each bus use?
-2. **Queue arbitration** — when multiple buses want the same charger, who goes first?
+1. **Plan selection** - which charging stations should each bus use?
+2. **Queue arbitration** - when multiple buses want the same charger, who goes first?
 
 I chose an **event-driven priority-queue simulation** with a **weighted cost function** because:
 
 - It naturally handles shared resources (chargers) without complex constraint solving.
 - Weights are first-class inputs, not coefficients buried in code.
-- New rules are additive — define a penalty term, wire it in, done.
+- New rules are additive - define a penalty term, wire it in, done.
 - It scales linearly with buses × stops, not exponentially like a full combinatorial solver.
 
 Alternatives considered:
@@ -22,7 +22,7 @@ Alternatives considered:
 
 ### The two-phase architecture
 
-**Phase 1 — Plan selection (offline)**
+**Phase 1 - Plan selection (offline)**
 
 For each bus, enumerate all feasible 2–4 stop subsets. Score each using:
 
@@ -39,7 +39,7 @@ Where:
 
 The load estimate feeds back as buses are assigned plans, so later buses naturally shift to less congested stations.
 
-**Phase 2 — Queue simulation (online)**
+**Phase 2 - Queue simulation (online)**
 
 A min-heap of `(arrival_time, tie_break, bus_id, plan_idx)` events drives the simulation. On each pop:
 
@@ -71,11 +71,11 @@ The `RouteGraph` class derives everything (station order, distances, travel time
 
 ---
 
-## Anticipated future changes — and how the design handles each
+## Anticipated future changes - and how the design handles each
 
 ### 1. Different segment distances / a new segment added to the route
 
-**Handled by data alone.** The route is described entirely by the `segments` array in JSON. Add a segment, change a distance — `RouteGraph` recomputes everything. Zero code changes.
+**Handled by data alone.** The route is described entirely by the `segments` array in JSON. Add a segment, change a distance - `RouteGraph` recomputes everything. Zero code changes.
 
 ### 2. More charging stations (e.g., add station E between D and Kochi)
 
@@ -123,7 +123,7 @@ The `RouteGraph` class derives everything (station order, distances, travel time
 
 ---
 
-## How to change a weight (concrete example)
+## How to change a weight 
 
 Scenario 4 has `operator = 2.0`. To increase it to 3.0:
 
@@ -140,16 +140,16 @@ Reload the app. The scheduler re-runs with the new weight. No code touched.
 
 ---
 
-## How to add a new rule (concrete example)
+## How to add a new rule 
 
 **Business rule**: penalise plans that use station B during the 20:00–21:00 peak window.
 
-**Step 1** — Add weight to scenario JSON:
+**Step 1** - Add weight to scenario JSON:
 ```json
 "weights": { ..., "peak_avoidance": 1.5 }
 ```
 
-**Step 2** — Add field to `Weights` dataclass:
+**Step 2** - Add field to `Weights` dataclass:
 ```python
 @dataclass
 class Weights:
@@ -159,7 +159,7 @@ class Weights:
     peak_avoidance: float = 0.0   # ← new
 ```
 
-**Step 3** — Parse in `run_scheduler()`:
+**Step 3** - Parse in `run_scheduler()`:
 ```python
 weights = Weights(
     ...
@@ -167,9 +167,9 @@ weights = Weights(
 )
 ```
 
-**Step 4** — Add term in `_score_plan()`:
+**Step 4** - Add term in `_score_plan()`:
 ```python
-# ── Peak avoidance: penalise using station B during 20:00–21:00
+#  Peak avoidance: penalise using station B during 20:00–21:00
 peak_stations = {"B"}
 peak_window = (20 * 60, 21 * 60)
 estimated_arrival_at_B = bus.departure_min + 100 / physics.speed_kmh * 60  # rough
@@ -188,11 +188,11 @@ Total diff: ~10 lines across 2 files, no engine rewrite.
 
 ## Assumptions
 
-1. **Speed is uniform** — no traffic, no variation. One `speed_kmh` value per scenario.
-2. **Buses start with a full charge** — Bengaluru and Kochi provide a full charge before departure.
-3. **Charging is always to full** — partial charges are not modelled.
-4. **Buses follow route order** — no skipping or backtracking.
-5. **Charger queues are FCFS within a time step** — when two buses arrive at the same minute, lower heap tie-break counter (earlier-registered) goes first. In practice this is resolved by the weighted plan selection upstream.
-6. **Time is continuous float minutes** — no discretisation, no rounding in the simulation.
-7. **Kochi/Bengaluru endpoints are not scheduling stations** — as specified.
-8. **The minimum feasible stop count is 2** — verified: 540 km total, 240 km range, at least 2 charges required.
+1. **Speed is uniform** -no traffic, no variation. One `speed_kmh` value per scenario.
+2. **Buses start with a full charge** - Bengaluru and Kochi provide a full charge before departure.
+3. **Charging is always to full** - partial charges are not modelled.
+4. **Buses follow route order** - no skipping or backtracking.
+5. **Charger queues are FCFS within a time step** - when two buses arrive at the same minute, lower heap tie-break counter (earlier-registered) goes first. In practice this is resolved by the weighted plan selection upstream.
+6. **Time is continuous float minutes** - no discretisation, no rounding in the simulation.
+7. **Kochi/Bengaluru endpoints are not scheduling stations** - as specified.
+8. **The minimum feasible stop count is 2** - verified: 540 km total, 240 km range, at least 2 charges required.
